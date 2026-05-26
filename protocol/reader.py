@@ -1,0 +1,68 @@
+# protocol/reader.py
+# Data reading utilities for PLDM protocol blocks
+from core.config import get_value_from_ini, INI_TYPE2
+from core.utils import get_data_from_lst
+from core.types import hex_to_type
+
+
+def get_multi_data_from_block(block, ini_file, section, key_name):
+	val = ""
+	ini_value = get_value_from_ini(ini_file, section, key_name)
+	if ini_value is None:
+		return ""
+	parts = ini_value.split(';')
+	idx = int(parts[0])
+	length = int(parts[1])
+
+	for i in range(length):
+		data = get_data_from_lst(block, idx)
+		if data is None:
+			break
+		val = val + data
+		idx = idx + 1
+	return val
+	
+
+def get_multi_keys_data_from_block(block, ini_file, section, key_name_list):
+	reading_info = {}
+	for key_name in key_name_list:
+		reading_info[key_name] = get_multi_data_from_block(block, ini_file, section, key_name)
+	if len(key_name_list) == 1:
+		return reading_info[key_name]
+	else:
+		return reading_info
+	
+
+def get_values_according_to_keys(block, ini_file, section, keys):
+	reading_info = {}
+	for item in keys:
+		val = get_multi_data_from_block(block, ini_file, section, item)
+		reading_info[item] = get_value_from_ini(ini_file, item.upper(), val)
+	if len(keys) == 1:
+		return reading_info[item]
+	else:
+		return reading_info
+
+
+def get_present_reading(block, section, sensor_data_size):
+	present_reading_length = get_value_from_ini(INI_TYPE2, "PRESENT_READING_LENGTH", sensor_data_size)
+	if present_reading_length is None:
+		return {"hex": "", "dec": 0}
+	present_reading = ""
+	base_idx_str = get_value_from_ini(INI_TYPE2, section, "present_reading")
+	if base_idx_str is None:
+		return {"hex": "", "dec": 0}
+	base_idx = int(base_idx_str)
+	for length in range(int(present_reading_length)-1, -1, -1):
+		data = get_data_from_lst(block, base_idx + length)
+		if data is None:
+			break
+		present_reading += data
+	try:
+		dec_val = hex_to_type(present_reading, sensor_data_size) if present_reading else 0
+	except (ValueError, TypeError):
+		dec_val = 0
+	return {
+		"hex": present_reading,
+		"dec": dec_val
+	}
