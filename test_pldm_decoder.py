@@ -655,7 +655,7 @@ class TestIntegration(unittest.TestCase):
         import subprocess
         # 使用较小的 mctp_trace_t2.txt
         result = subprocess.run(
-            ['python3', 'pldm_decoder.py', '-e', '08', '-f', 'mctp_trace_t2.txt'],
+            ['python3', 'pldm_decoder.py', '-e', '08', '-f', 'data/mctp_trace_t2.txt'],
             capture_output=True, text=True, timeout=30
         )
         # 检查没有崩溃
@@ -667,7 +667,7 @@ class TestIntegration(unittest.TestCase):
         """测试 verbose 模式"""
         import subprocess
         result = subprocess.run(
-            ['python3', 'pldm_decoder.py', '-e', '08', '-f', 'mctp_trace_t2.txt', '-v'],
+            ['python3', 'pldm_decoder.py', '-e', '08', '-f', 'data/mctp_trace_t2.txt', '-v'],
             capture_output=True, text=True, timeout=30
         )
         self.assertEqual(result.returncode, 0)

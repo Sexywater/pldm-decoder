@@ -1,7 +1,7 @@
 # handlers/get_state_sensor_readings.py
 from core.config import get_value_from_ini, INI_TYPE2, INI_NIC_SENSOR
 from core.utils import get_data_from_lst
-from protocol.reader import get_values_according_to_keys, get_multi_data_from_block
+from protocol.reader import get_values_according_to_keys, get_multi_data_from_block, is_request_block
 from protocol.sensor import get_sensor_id
 from protocol.payload import new_payload
 
@@ -10,7 +10,7 @@ from protocol.payload import new_payload
 def process_getstatesensorreadings_payload(block):
 	vdm_payload = new_payload()
 	# If the block length is 25 and the last two data entries are both "00", determine whether it is a request.
-	if len(block) == 25 and block[-2:] == ["00", "00"]:
+	if is_request_block(block, 25, 2):
 		sensor_id = get_sensor_id(block)
 		if sensor_id is None:
 			return vdm_payload

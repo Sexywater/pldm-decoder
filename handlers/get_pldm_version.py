@@ -1,13 +1,13 @@
 # handlers/get_pldm_version.py
 from core.config import INI_TYPE0
-from protocol.reader import get_values_according_to_keys, get_multi_data_from_block
+from protocol.reader import get_values_according_to_keys, get_multi_data_from_block, is_request_block
 from protocol.payload import new_payload
 
 
 def process_get_pldm_version_payload(block):
 	vdm_payload = new_payload()
 	
-	if len(block) == 29 and block[-2:] == ["00", "00"]:
+	if is_request_block(block, 29, 2):
 		data_transfer_handle = get_multi_data_from_block(block, INI_TYPE0, "GET_PLDM_VERSION_REQUEST", "data_transfer_handle")
 		transfer_operation_flag = get_values_according_to_keys(block, INI_TYPE0, "GET_PLDM_VERSION_REQUEST", ["transfer_operation_flag"])
 		pldm_type = get_multi_data_from_block(block, INI_TYPE0, "GET_PLDM_VERSION_REQUEST", "pldm_type")

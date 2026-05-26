@@ -1,18 +1,42 @@
 # protocol/reader.py
 # Data reading utilities for PLDM protocol blocks
+from functools import lru_cache
 from core.config import get_value_from_ini, INI_TYPE2
 from core.utils import get_data_from_lst
 from core.types import hex_to_type
 
 
-def get_multi_data_from_block(block, ini_file, section, key_name):
-	val = ""
+@lru_cache(maxsize=128)
+def _parse_field_spec(ini_file, section, key_name):
+	"""Parse 'index;length' from ini into (index, length) tuple, cached"""
 	ini_value = get_value_from_ini(ini_file, section, key_name)
 	if ini_value is None:
-		return ""
+		return None
 	parts = ini_value.split(';')
-	idx = int(parts[0])
-	length = int(parts[1])
+	return (int(parts[0]), int(parts[1]))
+
+
+def is_request_block(block, expected_len, trailer_len=0):
+	"""Check if block is a request message by length and optional trailer pattern.
+	
+	Args:
+		block: The data block to check
+		expected_len: Expected total length of the block
+		trailer_len: Number of trailing bytes that should be zero (0 = no check)
+	"""
+	if len(block) != expected_len:
+		return False
+	if trailer_len > 0:
+		return block[-trailer_len:] == ["00"] * trailer_len
+	return True
+
+
+def get_multi_data_from_block(block, ini_file, section, key_name):
+	val = ""
+	spec = _parse_field_spec(ini_file, section, key_name)
+	if spec is None:
+		return ""
+	idx, length = spec
 
 	for i in range(length):
 		data = get_data_from_lst(block, idx)

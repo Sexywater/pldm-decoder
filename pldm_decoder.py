@@ -1,6 +1,7 @@
 # main.py
 import argparse
 import sys
+import os
 from parser.log_processor import process_file, merge_log_blocks, clean_block
 from parser.vdm_header import extract_vdm_header
 from protocol.payload import decode_payload
@@ -37,8 +38,10 @@ def main():
 		prog='pldm_decoder',
 		description='PLDM (Platform Level Data Model) trace decoder for MCTP over PCIe VDM logs',
 		epilog='Examples:\n'
-		       '  python3 pldm_decoder.py -e 08 -f mctp_trace.txt\n'
-		       '  python3 pldm_decoder.py -e 08 -f mctp_trace.txt -v',
+		       '  python3 pldm_decoder.py -e 08 -f data/mctp_trace.txt\n'
+		       '  python3 pldm_decoder.py -e 08 -f data/mctp_trace.txt -v\n'
+		       '  python3 pldm_decoder.py -e 08 -f data/mctp_trace.txt -o result.txt\n'
+		       '  python3 pldm_decoder.py -e 08 -f data/mctp_trace.txt -v -o result.txt',
 		formatter_class=argparse.RawDescriptionHelpFormatter
 	)
 	parser.add_argument('-e', '--eid', type=str, required=True, metavar='EID',
@@ -47,8 +50,18 @@ def main():
 	                    help='Path to the MCTP trace log file')
 	parser.add_argument('-v', '--verbose', action='store_true',
 	                    help='Enable verbose output with detailed field information')
+	parser.add_argument('-o', '--output', type=str, default=None, metavar='FILE',
+	                    help='Save decoded result to log/ directory (e.g. -o result.txt)')
 	
 	args = parser.parse_args()
+
+	# Redirect stdout to log file if -o is specified
+	output_file = None
+	if args.output:
+		os.makedirs('log', exist_ok=True)
+		output_path = os.path.join('log', args.output)
+		output_file = open(output_path, 'w', encoding='utf-8')
+		sys.stdout = output_file
 
 	# Read file once: filter-print and extract blocks simultaneously
 	blocks = merge_log_blocks(process_file(args.file, args.eid))
@@ -65,6 +78,9 @@ def main():
 			if handler:
 				_, process_func = handler
 				decode_payload(cleaned_block, process_func(cleaned_block), args.verbose)
+
+	if output_file:
+		output_file.close()
 
 if __name__ == "__main__":
 	main()

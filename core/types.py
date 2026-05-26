@@ -12,13 +12,7 @@ def hex_to_type(hex_str, typ):
 	return num
 	
 def to_decimal(value):
-	if value != "":
-		return {
-		"hex": value,
-		"dec": int(str(value), 16)
-	}
-	else:
-		return None
+	return {"hex": value, "dec": int(str(value), 16)} if value else None
 
 def parse_support_thresholds(bin_value):
 	bin_value = bin_value.zfill(8)
@@ -30,16 +24,17 @@ def parse_support_thresholds(bin_value):
 		2: "upperThresholdFatal",
 		1: "upperThresholdCritical",
 		0: "upperThresholdWarning"
-    }
+	}
 	
 	supported_thresholds = []
 	for bit_pos, threshold_name in threshold_mapping.items():
 		bit_val = bin_value[7 - bit_pos]
 		if bit_val == "1":
-			supported_thresholds.append(threshold_name) 
+			supported_thresholds.append(threshold_name)
 	return supported_thresholds if supported_thresholds else "no supported threshold"
 	
-def parse_range_filed_support(bin_value):
+def parse_range_field_support(bin_value):
+	"""Parse range field support bits into human-readable list"""
 	bin_value = bin_value.zfill(8)
 	
 	field_mapping = {
@@ -50,12 +45,15 @@ def parse_range_filed_support(bin_value):
 		2: "normalMin field supported",
 		1: "normalMax field supported",
 		0: "nominalValue field supported"
-    }
+	}
 	
 	supported_fields = []
 	for bit_pos, field_name in field_mapping.items():
 		bit_val = bin_value[7 - bit_pos]
 		if bit_val == "1":
-			supported_fields.append(field_name) 
+			supported_fields.append(field_name)
 	
 	return supported_fields if supported_fields else "no supported field"
+
+# Alias for backward compatibility
+parse_range_filed_support = parse_range_field_support

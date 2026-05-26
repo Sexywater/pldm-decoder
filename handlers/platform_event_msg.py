@@ -1,6 +1,6 @@
 # handlers/platform_event_msg.py
 from core.config import get_value_from_ini, INI_TYPE2, INI_NIC_SENSOR
-from protocol.reader import get_multi_data_from_block, get_values_according_to_keys, get_present_reading
+from protocol.reader import get_multi_data_from_block, get_values_according_to_keys, get_present_reading, is_request_block
 from protocol.sensor import get_sensor_id
 from protocol.payload import new_payload
 
@@ -8,7 +8,7 @@ from protocol.payload import new_payload
 def process_platformeventmsg_payload(block):
 	vdm_payload = new_payload()
 	# handle ACK info
-	if len(block) == 25 and block[-4:] == ["00", "00", "00", "00"]:
+	if is_request_block(block, 25, 4):
 		vdm_payload["output"].append("send an ack message from BMC to device")
 		return vdm_payload
 
