@@ -46,22 +46,22 @@ def _parse_numeric_sensor_pdr(block, vdm_payload):
 	sensor_data_size_bits = int(re.search(r'\d+', values['sensor_data_size']).group())
 	sensor_data_size_bytes = sensor_data_size_bits // 8
 	
-	# 动态计算 range field 区域的起始偏移: update_interval 结束位置
+	# Calculate range field area start offset: after update_interval
 	update_interval_cfg = get_value_from_ini(INI_TYPE2, "NUMERIC_SENSOR_PDR", "update_interval")
 	ui_offset, ui_length = (int(x) for x in update_interval_cfg.split(';'))
 	range_base = ui_offset + ui_length
 	
-	# max_readable / min_readable 各占 sensor_data_size_bytes
+	# max_readable / min_readable each occupy sensor_data_size_bytes
 	max_readable = to_decimal(get_multi_data_from_lst(block, range_base, sensor_data_size_bytes))
 	min_readable = to_decimal(get_multi_data_from_lst(block, range_base + sensor_data_size_bytes, sensor_data_size_bytes))
 	
-	# range_field_format (1 byte) 和 range_field_support (1 byte)
+	# range_field_format (1 byte) and range_field_support (1 byte)
 	range_field_format = get_multi_data_from_lst(block, range_base + sensor_data_size_bytes * 2, 1)
 	field_format = int(range_field_format) if range_field_format else 0
 	range_field_support = get_multi_data_from_lst(block, range_base + sensor_data_size_bytes * 2 + 1, 1)
 	range_field_support = parse_range_filed_support(bin(int(range_field_support, 16))[2:])
 	
-	# 9 个 range field values, 每个占 field_format 字节
+	# 9 range field values, each occupies field_format bytes
 	field_names = [
 		"nominal_value", "normal_max", "normal_min",
 		"warning_high", "warning_low", "critical_high",
