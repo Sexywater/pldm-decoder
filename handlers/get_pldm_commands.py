@@ -38,12 +38,20 @@ def process_get_pldm_commands_payload(block):
 	else:
 		completion_code = get_values_according_to_keys(block, INI_TYPE0, "GET_PLDM_COMMANDS_RESPOND", ['completion_code'])
 		pldm_commands_lst = block[22:]
-		result = []
-		for i in range(len(pldm_commands_lst)-1, -1, -1):
-			if pldm_commands_lst[i] != '00':
-				result = pldm_commands_lst[:i+1]
-				break
 		
-		vdm_payload["output"].append(f"Supported pldm commands : {result}, completion_code : {completion_code} ")
+		# Parse command bitmap: each byte's bits represent supported command codes
+		# Bit 0 of byte 0 = command 0, Bit 1 of byte 0 = command 1, etc.
+		supported_commands = []
+		for byte_idx, hex_byte in enumerate(pldm_commands_lst):
+			try:
+				byte_val = int(hex_byte, 16)
+			except ValueError:
+				continue
+			for bit in range(8):
+				if byte_val & (1 << bit):
+					command_code = byte_idx * 8 + bit
+					supported_commands.append(f"0x{command_code:02X}")
+		
+		vdm_payload["output"].append(f"Supported pldm commands : {supported_commands}, completion_code : {completion_code} ")
 		
 		return vdm_payload
